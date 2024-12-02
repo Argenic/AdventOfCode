@@ -14,6 +14,28 @@ std::vector<int> splitToInt(const std::string& line, char delimiter) {
     return numbers;
 }
 
+bool validateNumbers(std::vector<int> numbers) {
+    // Check if the numbers are ascending or descending.
+    if (!std::is_sorted(numbers.begin(), numbers.end()) && 
+        !std::is_sorted(numbers.begin(), numbers.end(), std::greater<int>())) {
+        return false;
+    }
+
+    // Check if unique.
+    if (std::unique(numbers.begin(), numbers.end()) != numbers.end()) {
+        return false;
+    }
+
+    // Check if the difference between each number is 1 - 3.
+    for (int i = 1; i < numbers.size(); i++) {
+        if (abs(numbers[i] - numbers[i - 1]) > 3) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 /**
  * @brief Find the difference in 2 lists by sorting them Ascending.
  */
@@ -30,41 +52,9 @@ void day02part01() {
     for (const std::string& line : input) {
         // Split the line based on its spaces into integers and safeguard.
         std::vector<int> numbers = splitToInt(line, ' ');
-        if (numbers.size() < 2) continue;
 
-        // Setup the first 2 values to compare
-        int first_value = numbers[0];
-        int second_value = numbers[1];
-        
-        // Validate the pair
-        if (abs(first_value - second_value) > 3) continue;
-        if (first_value == second_value) continue;
-
-        // Setup the markers for later processing.
-        bool going_up = first_value < second_value;
-        bool safe = true;
-        int previous_value = second_value;
-
-        // Iterate the rest of the lines.
-        for (int i = 2; i < numbers.size(); i++) {
-            // Decide on a current number to compare
-            int current_value = numbers[i];
-
-            // Validate the current and previous value based on direction and difference. 
-            if ((going_up && previous_value >= current_value) || 
-                (!going_up && previous_value <= current_value) || 
-                abs(previous_value - current_value) > 3) {
-                // If invalid mark and exit the loop.
-                safe = false;
-                break;
-            }
-
-            // Replace prev with current for next cycle,
-            previous_value = current_value;
-        }
-
-        // Increment if safe.
-        if (safe) {
+        // Validate numbers
+        if (validateNumbers(numbers)) {
             safe_reports++;
         }
     }
@@ -85,102 +75,25 @@ void day02part02() {
     // Collect end result
     int safe_reports = 0;
 
-    // Iterate every input line to verify if safe
+    // Iterate every line and decide on safe or not
     for (const std::string& line : input) {
-        // Setup Markers
-        bool safe = true;
-        bool last_try = false;
-
-        // Split numbers in lines and guard against incorrect input
+        // Split the line based on its spaces into integers and safeguard.
         std::vector<int> numbers = splitToInt(line, ' ');
-        if (numbers.size() < 2) continue;
-
-        // Extract the first 2 values to decide where to start
-        int first_value = numbers[0];
-        int second_value = numbers[1];
-        int start = 2;
-
-        // Validate first pair
-        if (
-            abs(first_value - second_value) > 3 ||
-            first_value == second_value
-        ) {
-            std::cout << "Ah Oh" << std::endl;
-            // Invalid first try, last chance
-            last_try = true;
-
-            first_value = numbers[1];
-            second_value = numbers[2];
-            // Validate again,  
-            if (
-                abs(first_value - second_value) > 3 ||
-                first_value == second_value
-            ) {
-                // Where out.
-                std::cout << "Double Start Fail " << line << std::endl;
-                continue;
-            }
-            start = 3;
-        }
-
-        // Decide direction
-        bool going_up = first_value < second_value;
-        
-        // Setup previous_value to start the loop
-        int previous_value = second_value;
-
-        // Iterate the remainder and decide
-        for (int i = start; i < numbers.size(); i++) {
-            // Set the current value to match against
-            int current_value = numbers[i];
-
-            // Validate the previous and current value chanin based on the direction
-            if ((going_up && previous_value >= current_value) || 
-                (!going_up && previous_value <= current_value) || 
-                abs(previous_value - current_value) > 3) {
-                    // Decide if we go for a last try,
-                    if(!last_try) {
-                        last_try = true;
-                        // 
-                        previous_value = numbers[i-2];
-                        // Go back one and match it with current.
-                        if ((going_up && previous_value >= current_value) || 
-                            (!going_up && previous_value <= current_value) || 
-                            abs(previous_value - current_value) > 3) 
-                        {
-                            // If, i is the last element, then we can ignore this error and call it safe,
-                            if(i == numbers.size() - 1) {
-                                // Last element is wrong, we can ignore this.
-                                continue;
-                            }
-
-                            // Go Forward, check if the is legit.
-                            previous_value = numbers[i-1];
-                            int next_value = numbers[i+1];
-                            if ((going_up && previous_value >= next_value) || 
-                                (!going_up && previous_value <= next_value) || 
-                                abs(previous_value - next_value) > 3) 
-                            {
-                                //std::cout << "Double Fail: " << line << " " << previous_value << "x" << current_value <<  std::endl;
-                                std::cout << "Double Failure: " << line << std::endl;
-                                safe = false;
-                                break;
-                            } else {
-                                current_value = next_value;
-                                i++;
-                            }
-                        }
-                    } else {
-                        std::cout << "Failed Last Try " << line << std::endl;
-                        safe = false;
-                        break;
-                    }
-            }
-            previous_value = current_value;
-        }
-
-        if (safe) {
+    
+        // Validate numbers
+        if (validateNumbers(numbers)) {
             safe_reports++;
+            continue;
+        }
+
+        // Iterate every value in numbers and make a copy to validate the number again, if it is safe, increment the counter.
+        for (int i = 0; i < numbers.size(); i++) {
+            std::vector<int> copy = numbers;
+            copy.erase(copy.begin() + i);
+            if (validateNumbers(copy)) {
+                safe_reports++;
+                break;
+            }
         }
     }
 
