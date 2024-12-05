@@ -96,7 +96,6 @@ void day05part01() {
     // Call the function to split lines
     splitLinesIntoMarkersAndSamples(input, markers, samples);
     
-    // Create a vector of pairs out of this in C++ standards
     std::unordered_map<int, std::vector<std::pair<int, int>>> keyValues;
 
     // Call the function to create the lookup table
